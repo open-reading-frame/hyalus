@@ -6,7 +6,7 @@ SPHINXBUILD   = sphinx-build
 SOURCEDIR     = docs
 BUILDDIR      = _build
 
-CODEDIRS = <DEFINE CODE DIRS HERE SPACE SEPARATED>
+CODEDIRS =
 
 
 # Make commands

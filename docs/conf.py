@@ -8,8 +8,8 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'SET PROJECT NAME'
-copyright = '2021, Genapsys'
+project = 'Hyalus'
+copyright = '2022, Genapsys'
 
 # The short X.Y version
 version = '0.0.1'
