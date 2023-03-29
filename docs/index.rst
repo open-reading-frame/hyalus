@@ -2,19 +2,41 @@
 Hyalus
 ######
 
-.. include:: ../README.md
-   :parser: myst_parser.sphinx_
-
-
-*******
-Details
-*******
+******
+README
+******
 
 .. toctree::
-  :maxdepth: 1
   :glob:
 
-  _code/modules.rst
-  _tests/modules.rst:
+  readme.rst
+
+**********************
+Contributing to Hyalus
+**********************
+
+.. toctree::
+  :glob:
+
+  contributing.rst
+
+********
+api-docs
+********
+
+.. toctree::
+  :maxdepth: 4
+  :glob:
+
+  _src/hyalus/modules.rst
+  _tests/modules.rst
 
 
+********
+Releases
+********
+
+.. toctree::
+  :glob:
+
+  releases

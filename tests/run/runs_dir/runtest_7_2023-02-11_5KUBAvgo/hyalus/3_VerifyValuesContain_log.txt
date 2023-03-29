@@ -1,0 +1,1 @@
+2023-02-09 14:38:35,611 [INFO] hyalus.config.steps.verify: 80 - Comparison 'output/food.json' values contain 'Mexican' evaluated to True

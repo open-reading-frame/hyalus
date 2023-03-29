@@ -1,0 +1,10 @@
+# Include the other test suite and other tests
+suite_1.ste
+runtest_3
+
+
+# include some newlines to make sure they are ignored
+
+
+
+runtest_4

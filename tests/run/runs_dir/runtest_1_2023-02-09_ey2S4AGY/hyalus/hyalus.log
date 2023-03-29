@@ -1,0 +1,6 @@
+2023-02-09 14:38:35,614 [INFO] hyalus.run.runtest: 148 - Running /Users/david.mcconnell/Desktop/git/genapsys/hyalus/tests/run/test_dir_1/runtest_1
+2023-02-09 14:38:35,614 [INFO] hyalus.config.steps.run: 110 - Function custom_func executed successfully
+2023-02-09 14:38:35,615 [INFO] hyalus.config.steps.run: 110 - Function custom_func executed successfully
+2023-02-09 14:38:35,615 [INFO] hyalus.config.steps.verify: 80 - Comparison ('output/food.json', ['best_cuisine']) == 'Mexican' evaluated to True
+2023-02-09 14:38:35,616 [INFO] hyalus.config.steps.verify: 80 - Comparison ('output/coffee.json', ['best_coffee_shop']) == 'Ozo' evaluated to True
+2023-02-09 14:38:35,616 [INFO] hyalus.run.runtest: 91 - runtest_1: SUCCESS

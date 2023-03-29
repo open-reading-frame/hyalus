@@ -1,0 +1,1 @@
+"""Hyalus test configuration logic"""

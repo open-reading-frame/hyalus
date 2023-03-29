@@ -1,0 +1,500 @@
+#!/usr/bin/env python3
+"""Main entrypoint for hyalus"""
+
+__author__ = "David McConnell"
+__credits__ = ["David McConnell"]
+__maintainer__ = "David McConnell"
+
+import argparse
+from datetime import datetime, date, timedelta
+from getpass import getuser
+from pathlib import Path
+import sys
+from typing import Any
+
+# pylint: disable=no-name-in-module, import-self
+from hyalus import __file__ as hyalus_init, __version__ as hyalus_version
+from hyalus.run import (
+    HyalusTestRunner,
+    HyalusSuiteRunner,
+    HyalusListRunner,
+    HyalusCleanRunner,
+    HyalusTemplateRunner,
+    HyalusSettingsRunner,
+)
+from hyalus.run.common import DATE_FMT
+from hyalus.run.settings import SettingValue
+from hyalus.utils.json_utils import JSONLiteral
+from hyalus.utils.typing_utils import type_string
+
+SETTINGS_DIR = Path(hyalus_init).parent / "settings"
+USER_CONFIG = SETTINGS_DIR / f"{getuser()}.json"
+SETTING_UPDATE_DELIM = '='
+
+
+def runtest(
+    to_run: str,
+    runs_dir: str,
+    search_dirs: list[str],
+    cleanup_on_pass: bool,
+    stdout: bool,
+    debug: bool,
+) -> None:
+    """Run hyalus runtest"""
+    runner = HyalusTestRunner(
+        to_run,
+        runs_dir=runs_dir,
+        search_dirs=search_dirs,
+        cleanup_on_pass=cleanup_on_pass,
+        stdout=stdout,
+        debug=debug,
+    )
+
+    if runner.run():
+        sys.exit(0)
+
+    sys.exit(1)
+
+
+def runsuite(
+    to_run: list[str],
+    runs_dir: str,
+    search_dirs: list[str],
+    tags: list[str],
+    tag_op_str: str,
+    cleanup_on_pass: bool,
+    debug: bool,
+) -> None:
+    """Run hyalus runsuite"""
+    tag_op = {"any": any, "all": all}[tag_op_str]
+
+    runner = HyalusSuiteRunner(
+        to_run=to_run,
+        runs_dir=runs_dir,
+        search_dirs=search_dirs,
+        tags=tags,
+        tag_op=tag_op,
+        cleanup_on_pass=cleanup_on_pass,
+        debug=debug,
+    )
+
+    if runner.run():
+        sys.exit(0)
+
+    sys.exit(1)
+
+
+def settings(
+    output_descriptions: bool,
+    updates: list[str],
+    to_reset: list[str],
+) -> None:
+    """Run hyalus settings"""
+    to_update: dict[str, SettingValue] = {}
+
+    for pair in updates:
+        key, value = pair.split(SETTING_UPDATE_DELIM, maxsplit=1)
+        to_update[key] = type_string(value)
+
+    runner = HyalusSettingsRunner(
+        USER_CONFIG,
+        output_descriptions=output_descriptions,
+        to_update=to_update,
+        to_reset=to_reset,
+    )
+
+    runner.run()
+
+
+def list_(
+    search_dirs: list[str],
+    tags: list[str],
+    tag_op_str: str,
+) -> None:
+    """Run hyalus list"""
+    tag_op = {"any": any, "all": all}[tag_op_str]
+
+    runner = HyalusListRunner(
+        search_dirs=search_dirs,
+        tags=tags,
+        tag_op=tag_op,
+    )
+
+    runner.run()
+
+
+def version() -> None:
+    """Run hyalus version"""
+    print(f"hyalus version: {hyalus_version}")
+
+
+def template(
+    test_names: list[str],
+    output_dir: str,
+    config_template: str | None,
+    hyalus_settings: dict[str, Any],
+) -> None:
+    """Run hyalus template"""
+    runner = HyalusTemplateRunner(
+        test_names,
+        output_dir=output_dir,
+        template=config_template,
+        settings=hyalus_settings,
+    )
+
+    runner.run()
+
+
+def clean(
+    runs_dir: str,
+    test_names: list[str],
+    tags: list[str],
+    tag_op_str: str,
+    oldest: str,
+    newest: str,
+    force: bool,
+) -> None:
+    """Run hyalus clean"""
+    tag_op = {"any": any, "all": all}[tag_op_str]
+
+    try:
+        oldest_date = date.today() - timedelta(days=int(oldest))
+    except ValueError:
+        oldest_date = datetime.strptime(oldest, DATE_FMT).date()
+
+    newest_date = datetime.strptime(newest, DATE_FMT).date()
+
+    runner = HyalusCleanRunner(
+        runs_dir,
+        to_clean=test_names,
+        tags=tags,
+        tag_op=tag_op,
+        oldest=oldest_date,
+        newest=newest_date,
+        force=force,
+    )
+
+    runner.run()
+
+
+def run_command(opts: argparse.Namespace, hyalus_settings: dict[str, Any], stdin: list[str]) -> None:
+    match opts.cmd:
+        case "runtest":
+            runtest(
+                opts.test,
+                hyalus_settings["runs_dir"],
+                hyalus_settings["search_dirs"],
+                hyalus_settings["cleanup_on_pass"],
+                opts.stdout,
+                opts.debug,
+            )
+        case "runsuite":
+            runsuite(
+                sorted(set(opts.tests + stdin)),
+                hyalus_settings["runs_dir"],
+                hyalus_settings["search_dirs"],
+                opts.tags,
+                opts.tag_op,
+                hyalus_settings["cleanup_on_pass"],
+                opts.debug,
+            )
+        case "settings":
+            settings(
+                opts.descriptions,
+                opts.update,
+                opts.reset,
+            )
+        case "list":
+            list_(
+                hyalus_settings["search_dirs"],
+                opts.tags,
+                opts.tag_op,
+            )
+        case "version":
+            version()
+        case "template":
+            template(
+                opts.tests,
+                opts.output_dir,
+                opts.config_template,
+                hyalus_settings,
+            )
+        case "clean":
+            clean(
+                hyalus_settings["runs_dir"],
+                opts.test_names,
+                opts.tags,
+                opts.tag_op,
+                opts.oldest,
+                opts.newest,
+                opts.force,
+            )
+
+
+def parse_args(hyalus_settings: dict[str, JSONLiteral]):
+    """Parse commandline args"""
+    parser = argparse.ArgumentParser(description="hyalus")
+
+    parser.add_argument(
+        "-s",
+        "--stdout",
+        action="store_true",
+        default=hyalus_settings["stdout"],
+        help="Log messages to stdout in addition to the hyalus log file and step log files",
+    )
+
+    parser.add_argument(
+        "-d",
+        "--debug",
+        action="store_true",
+        default=hyalus_settings["debug"],
+        help="Turn on hyalus debug logging",
+    )
+
+    subparsers = parser.add_subparsers(help="hyalus sub-commands", dest="cmd")
+
+    # runtest
+    runtest_parser = subparsers.add_parser(
+        "runtest",
+        help="Run a single provided test",
+    )
+
+    runtest_parser.add_argument(
+        "test",
+        help=(
+            "Name or path of test to run. Hyalus will look in the current working directory as well as any directories"
+            " pointed to in the search_dirs config setting if a name is given. If a path is given, hyalus will grab the"
+            " test directly from that path, relative to the current working directory."
+        ),
+    )
+
+    # runsuite
+    runsuite_parser = subparsers.add_parser(
+        "runsuite",
+        help="Run all provided tests/test plans",
+    )
+
+    runsuite_parser.add_argument(
+        "tests",
+        nargs='*',
+        default=[],
+        help=(
+            "Names or paths of tests/test plans to run. Hyalus will look in the current working directory as well as"
+            " any directories pointed to in the search_dirs config setting to find tests and test plans to run if just"
+            " names are given. If paths are given, hyalus will grab the tests and test plans directly from those"
+            " paths, relative to the current working directory."
+        ),
+    )
+
+    runsuite_parser.add_argument(
+        "-t",
+        "--tags",
+        nargs='+',
+        default=[],
+        help=(
+            "List of tags to compare against hyalus test config files which when matched will result in a given test"
+            " being run, e.g. 'Short' will run all tests tagged with the 'Short' tag. Tags are case insensitive. If"
+            " multiple tags are given, tests will have to meet either any of or all of the given tags based on the tag"
+            " operator."
+        ),
+    )
+
+    runsuite_parser.add_argument(
+        "-o",
+        "--tag-op",
+        choices=["any", "all"],
+        default=hyalus_settings["tag_operator"],
+        help=(
+            "Operator to apply to tag searching. 'any' means config must match one or more of specified tags, 'all'"
+            " means config must match all of the specified tags."
+        ),
+    )
+
+    # list
+    list_parser = subparsers.add_parser(
+        "list",
+        help="List available tests hyalus can find",
+    )
+
+    list_parser.add_argument(
+        "-t",
+        "--tags",
+        nargs='+',
+        default=[],
+        help=(
+            "List of tags to compare against hyalus test config files which when matched will result in a given test"
+            " being run, e.g. 'Short' will run all tests tagged with the 'Short' tag. Tags are case insensitive. If"
+            " multiple tags are given, tests will have to meet either any of or all of the given tags based on the tag"
+            " operator."
+        ),
+    )
+
+    list_parser.add_argument(
+        "-o",
+        "--tag-op",
+        choices=["any", "all"],
+        default=hyalus_settings["tag_operator"],
+        help=(
+            "Operator to apply to tag searching. 'any' means config must match one or more of specified tags, 'all'"
+            " means config must match all of the specified tags."
+        ),
+    )
+
+    # clean
+    clean_parser = subparsers.add_parser(
+        "clean",
+        help="Clean old hyalus test runs",
+    )
+
+    clean_parser.add_argument(
+        "test_names",
+        nargs='*',
+        default=[],
+        help="Names of tests to match against test runs. If none provided, all test runs will be considered matched.",
+    )
+
+    clean_parser.add_argument(
+        "-t",
+        "--tags",
+        nargs='+',
+        default=[],
+        help=(
+            "List of tags to compare against hyalus test config files which when matched will result in a given test"
+            " being run, e.g. 'Short' will run all tests tagged with the 'Short' tag. Tags are case insensitive. If"
+            " multiple tags are given, tests will have to meet either any of or all of the given tags based on the tag"
+            " operator."
+        ),
+    )
+
+    clean_parser.add_argument(
+        "-o",
+        "--tag-op",
+        choices=["any", "all"],
+        default=hyalus_settings["tag_operator"],
+        help=(
+            "Operator to apply to tag searching. 'any' means config must match one or more of specified tags, 'all'"
+            " means config must match all of the specified tags."
+        ),
+    )
+
+    clean_parser.add_argument(
+        "--oldest",
+        type=str,
+        default=hyalus_settings["oldest_test_run"],
+        help=(
+            "Date in the format YYYY-MM-DD OR integer specifying the oldest date a test run should be kept, or the"
+            " number of days from today a test run should be kept, respectively. Defaults to the oldest_test_run"
+            " config setting."
+        ),
+    )
+
+    clean_parser.add_argument(
+        "--newest",
+        type=str,
+        default=hyalus_settings["newest_test_run"],
+        help=(
+            "Date in the format YYYY-MM-DD specifying the newest date a test run should be kept. Defaults to the"
+            " newest_test_run config setting."
+        ),
+    )
+
+    clean_parser.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        default=hyalus_settings["force_clean"],
+        help="Force clean any test runs found to match criteria",
+    )
+
+    # template
+    template_parser = subparsers.add_parser(
+        "template",
+        help="Create template hyalus tests. Config settings will replace fields in given template as applicable.",
+    )
+
+    template_parser.add_argument(
+        "tests",
+        nargs='+',
+        default=[],
+        help="List of names of template tests to make.",
+    )
+
+    template_parser.add_argument(
+        "-o",
+        "--output-dir",
+        default=hyalus_settings["template_output_dir"],
+        help=(
+            "Output directory path for the generated template tests. Defaults to the template_output_directory config"
+            " setting."
+        ),
+    )
+
+    template_parser.add_argument(
+        "-c",
+        "--config-template",
+        help="Use a given config file template instead of the default hyalus one.",
+    )
+
+    # settings
+    settings_parser = subparsers.add_parser(
+        "settings",
+        help=(
+            "Display and optionally update hyalus configuration settings. Settings are stored on a per-user basis and"
+            " should persist even if hyalus is uninstalled and reinstalled."
+        ),
+    )
+
+    settings_parser.add_argument(
+        "-d",
+        "--descriptions",
+        action="store_true",
+        default=False,
+        help="Print descriptions for all settings prior to outputting current setting values",
+    )
+
+    settings_parser.add_argument(
+        "-u",
+        "--update",
+        nargs='+',
+        default=[],
+        help="Setting/value pairs in the format '<setting>=<value>' to use to update hyalus configuration.",
+    )
+
+    settings_parser.add_argument(
+        "-r",
+        "--reset",
+        nargs='+',
+        default=[],
+        help="Setting names to reset to default value.",
+    )
+
+    # version
+    version_parser = subparsers.add_parser(  # pylint: disable=unused-variable
+        "version",
+        help="Output the version of hyalus and exit",
+    )
+
+    args = parser.parse_args()
+
+    if not args.cmd:
+        parser.print_help(sys.stderr)
+        sys.exit(1)
+
+    return args
+
+
+def main():
+    user_settings = HyalusSettingsRunner(USER_CONFIG).settings
+
+    opts = parse_args(user_settings)
+
+    if sys.stdin.isatty():
+        stdin = []
+    else:
+        stdin = [line.strip('\n') for line in sys.stdin.readlines()]
+
+    run_command(opts, user_settings, stdin)
+
+
+if __name__ == "__main__":
+    main()

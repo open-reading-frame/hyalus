@@ -1,0 +1,1 @@
+2023-02-09 14:38:35,612 [INFO] hyalus.config.steps.verify: 80 - Comparison ('output/coffee.json', ['best_coffee_shop']) == 'Ozo' evaluated to True

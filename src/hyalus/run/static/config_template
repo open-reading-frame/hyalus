@@ -1,0 +1,19 @@
+# pylint: disable=import-outside-toplevel
+
+__author__ = "{config_author}"
+__credits__ = ["{config_author}"]
+__created_on__ = "{date}"
+
+from hyalus.config.steps.<module> import <Step>
+
+TEST_DESCRIPTION = "<Description for test - why does it exist? Links to GitHub issues, etc.>"
+INPUT_DATA = "<Where does the data come from? Was it modified? etc.>"
+
+
+STEPS = [
+
+]
+
+TAGS = [
+    Short(info="<expected runtime>")
+]

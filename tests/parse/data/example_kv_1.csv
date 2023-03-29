@@ -1,0 +1,4 @@
+key1,value1
+key2,"value2,more
+text"
+"key3,with delim",value3,'after the delimiter'

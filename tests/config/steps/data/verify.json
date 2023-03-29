@@ -1,0 +1,10 @@
+{
+    "values": [
+        {"1": 1, "2": 2},
+        {"1": 3, "2": 1}
+    ],
+    "metadata": {
+        "created_at": "some time",
+        "version": "3.0.1"
+    }
+}
