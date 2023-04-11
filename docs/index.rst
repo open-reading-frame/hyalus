@@ -11,6 +11,15 @@ README
 
   readme.rst
 
+***************
+Getting Started
+***************
+
+.. toctree::
+  :glob:
+
+  getting_started.rst
+
 **********************
 Contributing to Hyalus
 **********************
@@ -19,6 +28,15 @@ Contributing to Hyalus
   :glob:
 
   contributing.rst
+
+***************
+Code of Conduct
+***************
+
+.. toctree::
+  :glob:
+
+  code_of_conduct.rst
 
 ********
 api-docs
