@@ -14,12 +14,18 @@ extend-exclude = '''
 )/
 '''
 
+[tool.pytest.ini_options]
+# Disable entrypoints for hyalus, re-enabling any functionality in conftest.py
+addopts = "-p no:run_dir"
+
 [tool.coverage.run]
 source = ["hyalus"]
 omit = ["tests/*"]
 parallel = true
 concurrency = ["multiprocessing"]
 sigterm = true
+# When using pytest --cov and spawning subprocesses, this is incorrectly logged based on module import order
+disable_warnings = ["module-not-measured", "no-data-collected", "module-not-imported"]
 
 [tool.coverage.paths]
 source = ["src/hyalus", "*/site-packages/hyalus"]

@@ -25,7 +25,8 @@ def fixture_tmp_log(tmp_path):
 @pytest.fixture(name="hyalus_log_record")
 def fixture_hyalus_log_record():
     """Example log record for use in formatting testing"""
-    return logging.makeLogRecord(
+    logging.setLogRecordFactory(logging_utils.HyalusLogRecord)
+    record = logging.makeLogRecord(
         {
             "asctime": "2022-08-29 10:30:40,164",
             "levelname": "INFO",
@@ -35,6 +36,8 @@ def fixture_hyalus_log_record():
             "msg": "logging a message",
         }
     )
+    logging.setLogRecordFactory(logging.LogRecord)
+    return record
 
 
 class TestHyalusLogRecord:

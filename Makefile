@@ -46,9 +46,7 @@ confluence:
 
 __TARGET_HELP += "  * test - Run pytest and produce term-missing coverage report\n"
 test:
-	coverage run -m pytest || rm -f .coverage*
-	coverage combine -q
-	coverage report -m
+	pytest --cov
 
 __TARGET_HELP += "  * mypy - Run mypy, ignoring docs and confluence dirs\n"
 mypy:

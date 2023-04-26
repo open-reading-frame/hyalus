@@ -27,20 +27,17 @@ Submit a pull request at <https://github.com/GenapsysInc/hyalus>.
 All pull requests are expected to have at least one corresponding test case added/changed to test the changes.
 All existing tests and new tests must be passing to merge into `main`.
 Code coverage must also be at or above 90%.
-Tests can be run locally by running `make test`, `pytest`, or `coverage run -m pytest`.
-`pytest` and `coverage` must be installed to run tests and gather coverage information.
+Tests can be run locally by running `make test` or `pytest --cov`.
+`pytest` and `pytest-cov` must be installed to run tests and gather coverage information.
 `make test` will display both test results as well as code coverage from running the test suite.
-
-> **_NOTE:_** Hyalus is packaged to be available for use as a pytest plugin.
-In order to properly capture coverage information, pytest must be invoked *by* coverage (`coverage run -m pytest`), not the other way around (`pytest --cov`).
 
 ```text
 > make test
-coverage run -m pytest && coverage combine -q && coverage report -m
+pytest --cov
 ======================================================================== test session starts =========================================================================
 platform darwin -- Python 3.11.1, pytest-7.2.2, pluggy-1.0.0
 rootdir: /path/to/git/hyalus
-plugins: hyalus-0.1.0
+plugins: cov-4.0.0, hyalus-0.1.0
 collected 373 items
 
 tests/assertions/test_apply.py ....                                                    [  1%]
