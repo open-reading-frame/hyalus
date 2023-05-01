@@ -1,0 +1,4 @@
+# Markdown files other than README.md that should be included
+include CODE_OF_CONDUCT.md
+include CONTRIBUTING.md
+include GETTING_STARTED.md
