@@ -29,6 +29,18 @@ jobs:
     uses: GenapsysInc/internal-actions/.github/workflows/static-analysis.yml@main
     with:
       requirements-txt: requirements-test.txt
+  check-version:
+    if: ${{ github.event_name == 'pull_request' }}
+    name: Check Version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run the check-version action
+        id: run-check-version
+        uses: GenapsysInc/internal-actions/reusable-actions/check-version@main
+        with:
+          json: src/hyalus/metadata.json
+          include-paths: '*.py MANIFEST.in pyproject.toml setup.cfg'
+          exclude-paths: 'docs tests conftest.py'
   increment-version:
     name: Increment Version
     if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
@@ -41,7 +53,6 @@ jobs:
         uses: GenapsysInc/internal-actions/reusable-actions/increment-version@main
         with:
           json: src/hyalus/metadata.json
-          token: ${{ secrets.GH_REST_API_TOKEN }}
           protect-tag: true
   codeql:
     name: CodeQL ${{ matrix.language }}
@@ -69,10 +80,6 @@ jobs:
       - name: Documentation build and publish
         uses: GenapsysInc/internal-actions/reusable-actions/build-docs@main
         with:
-          token: ${{ secrets.GHCR_TOKEN }}
-          confluence_secret: ${{ secrets.CONFLUENCE_SECRET }}
-          build_confluence: true
-          publish_confluence: ${{ github.event_name == 'push' }}
           build_html: true
           publish_html: ${{ github.event_name == 'push' }}
           warn_as_errors: false
