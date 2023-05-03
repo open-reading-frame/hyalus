@@ -76,12 +76,11 @@ jobs:
     if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
     needs: increment-version
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - name: Documentation build and publish
         uses: GenapsysInc/internal-actions/reusable-actions/build-docs@main
         with:
+          token: ${{ secrets.GHCR_TOKEN }}
           build_html: true
           publish_html: ${{ github.event_name == 'push' }}
           warn_as_errors: false
