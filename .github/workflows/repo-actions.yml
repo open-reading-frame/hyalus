@@ -76,6 +76,8 @@ jobs:
     if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
     needs: increment-version
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Documentation build and publish
         uses: GenapsysInc/internal-actions/reusable-actions/build-docs@main
