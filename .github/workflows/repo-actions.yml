@@ -82,7 +82,7 @@ jobs:
       - name: Documentation build and publish
         uses: GenapsysInc/internal-actions/reusable-actions/build-docs@main
         with:
-          token: ${{ secrets.GHCR_TOKEN }}
+          token: ${{ github.token }}
           build_html: true
           publish_html: ${{ github.event_name == 'push' }}
           warn_as_errors: false
